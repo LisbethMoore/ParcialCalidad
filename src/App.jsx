@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import Invitados from './components/Invitados'
 
 function App() {
   const [eventos, setEventos] = useState(() => {
@@ -66,6 +67,13 @@ function App() {
   return (
     <div className="app">
       <h1>AnimeCon Manager</h1>
+      
+      {/* Módulo de Invitados */}
+      <Invitados />
+
+      <hr style={{ margin: '40px 0' }} />
+
+      {/* Módulo de Eventos */}
       <p>Gestión de eventos de la convención</p>
 
       <section>
