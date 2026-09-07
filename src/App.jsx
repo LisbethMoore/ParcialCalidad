@@ -1,121 +1,153 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [eventos, setEventos] = useState(() => {
+    const guardados = localStorage.getItem('eventos')
+    return guardados ? JSON.parse(guardados) : []
+  })
+
+  const [nombre, setNombre] = useState('')
+  const [fecha, setFecha] = useState('')
+  const [lugar, setLugar] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [editando, setEditando] = useState(null)
+
+  function guardarEvento(e) {
+    e.preventDefault()
+
+    const evento = {
+      id: editando || Date.now(),
+      nombre,
+      fecha,
+      lugar,
+      descripcion
+    }
+
+    let nuevosEventos
+
+    if (editando) {
+      nuevosEventos = eventos.map((item) =>
+        item.id === editando ? evento : item
+      )
+    } else {
+      nuevosEventos = [...eventos, evento]
+    }
+
+    setEventos(nuevosEventos)
+    localStorage.setItem('eventos', JSON.stringify(nuevosEventos))
+
+    limpiarFormulario()
+  }
+
+  function editarEvento(evento) {
+    setNombre(evento.nombre)
+    setFecha(evento.fecha)
+    setLugar(evento.lugar)
+    setDescripcion(evento.descripcion)
+    setEditando(evento.id)
+  }
+
+  function eliminarEvento(id) {
+    const nuevosEventos = eventos.filter((evento) => evento.id !== id)
+
+    setEventos(nuevosEventos)
+    localStorage.setItem('eventos', JSON.stringify(nuevosEventos))
+  }
+
+  function limpiarFormulario() {
+    setNombre('')
+    setFecha('')
+    setLugar('')
+    setDescripcion('')
+    setEditando(null)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+    <div className="app">
+      <h1>AnimeCon Manager</h1>
+      <p>Gestión de eventos de la convención</p>
+
+      <section>
+        <h2>{editando ? 'Editar evento' : 'Registrar evento'}</h2>
+
+        <form onSubmit={guardarEvento}>
+          <div>
+            <label>Nombre del evento</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label>Fecha</label>
+            <input
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label>Lugar</label>
+            <input
+              type="text"
+              value={lugar}
+              onChange={(e) => setLugar(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label>Descripción</label>
+            <textarea
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit">
+            {editando ? 'Actualizar evento' : 'Guardar evento'}
+          </button>
+
+          {editando && (
+            <button type="button" onClick={limpiarFormulario}>
+              Cancelar
+            </button>
+          )}
+        </form>
       </section>
 
-      <div className="ticks"></div>
+      <section>
+        <h2>Eventos registrados</h2>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+        {eventos.length === 0 ? (
+          <p>No hay eventos registrados.</p>
+        ) : (
+          eventos.map((evento) => (
+            <div key={evento.id}>
+              <h3>{evento.nombre}</h3>
+              <p>Fecha: {evento.fecha}</p>
+              <p>Lugar: {evento.lugar}</p>
+              <p>{evento.descripcion}</p>
+
+              <button onClick={() => editarEvento(evento)}>
+                Editar
+              </button>
+
+              <button onClick={() => eliminarEvento(evento.id)}>
+                Eliminar
+              </button>
+            </div>
+          ))
+        )}
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </div>
   )
 }
 
