@@ -1,105 +1,213 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
-export default function Invitados() {
+function Invitados() {
   const [invitados, setInvitados] = useState(() => {
-    const saved = localStorage.getItem('animecon_invitados');
-    return saved ? JSON.parse(saved) : [];
-  });
+    const guardados = localStorage.getItem('invitados')
+    return guardados ? JSON.parse(guardados) : []
+  })
 
-  const [form, setForm] = useState({
-    nombre: '',
-    personaje: '',
-    tipo: 'Cosplayer',
-    estado: 'Confirmado'
-  });
+  const [nombre, setNombre] = useState('')
+  const [serie, setSerie] = useState('')
+  const [tipo, setTipo] = useState('Cosplayer')
+  const [estado, setEstado] = useState('Confirmado')
+  const [editando, setEditando] = useState(null)
 
-  const [editIndex, setEditIndex] = useState(null);
+  // Filtros
+  const [busqueda, setBusqueda] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('Todos')
+  const [filtroEstado, setFiltroEstado] = useState('Todos')
 
   useEffect(() => {
-    localStorage.setItem('animecon_invitados', JSON.stringify(invitados));
-  }, [invitados]);
+    localStorage.setItem('invitados', JSON.stringify(invitados))
+  }, [invitados])
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.nombre || !form.personaje) return;
-
-    if (editIndex !== null) {
-      const updated = [...invitados];
-      updated[editIndex] = form;
-      setInvitados(updated);
-      setEditIndex(null);
-    } else {
-      setInvitados([...invitados, form]);
+  function guardarInvitado(e) {
+    e.preventDefault()
+    const invitado = {
+      id: editando || Date.now(),
+      nombre,
+      serie,
+      tipo,
+      estado
     }
 
-    setForm({ nombre: '', personaje: '', tipo: 'Cosplayer', estado: 'Confirmado' });
-  };
+    if (editando) {
+      setInvitados(invitados.map(i => i.id === editando ? invitado : i))
+    } else {
+      setInvitados([...invitados, invitado])
+    }
 
-  const handleEdit = (index) => {
-    setForm(invitados[index]);
-    setEditIndex(index);
-  };
+    limpiarFormulario()
+  }
 
-  const handleDelete = (index) => {
-    setInvitados(invitados.filter((_, i) => i !== index));
-  };
+  function editarInvitado(invitado) {
+    setNombre(invitado.nombre)
+    setSerie(invitado.serie)
+    setTipo(invitado.tipo)
+    setEstado(invitado.estado)
+    setEditando(invitado.id)
+  }
+
+  function eliminarInvitado(id) {
+    setInvitados(invitados.filter(i => i.id !== id))
+  }
+
+  function limpiarFormulario() {
+    setNombre('')
+    setSerie('')
+    setTipo('Cosplayer')
+    setEstado('Confirmado')
+    setEditando(null)
+  }
+
+  // Filtrado de invitados
+  const invitadosFiltrados = invitados.filter(i => {
+    const coincideNombre = i.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                           i.serie.toLowerCase().includes(busqueda.toLowerCase())
+    const coincideTipo = filtroTipo === 'Todos' || i.tipo === filtroTipo
+    const coincideEstado = filtroEstado === 'Todos' || i.estado === filtroEstado
+    return coincideNombre && coincideTipo && coincideEstado
+  })
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Gestión de Invitados / Cosplayers</h2>
-      
-      <form onSubmit={handleSubmit} style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <input 
-          type="text" 
-          placeholder="Nombre del Invitado" 
-          value={form.nombre} 
-          onChange={(e) => setForm({ ...form, nombre: e.target.value })} 
-          required 
-        />
-        <input 
-          type="text" 
-          placeholder="Serie / Personaje" 
-          value={form.personaje} 
-          onChange={(e) => setForm({ ...form, personaje: e.target.value })} 
-          required 
-        />
-        <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
-          <option value="Cosplayer">Cosplayer</option>
-          <option value="Seiyuu">Seiyuu</option>
-          <option value="Artista">Artista</option>
-        </select>
-        <select value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}>
-          <option value="Confirmado">Confirmado</option>
-          <option value="Pendiente">Pendiente</option>
-        </select>
-        <button type="submit">{editIndex !== null ? 'Actualizar' : 'Agregar'}</button>
+    <div>
+      <h2>Gestión de Invitados y Cosplayers</h2>
+      <p className="subtitle">Administra los paneles, cosplayers e invitados especiales</p>
+
+      {/* Formulario de registro/edición */}
+      <form className="form-grid" onSubmit={guardarInvitado}>
+        <h3>{editando ? 'Editar Invitado' : 'Registrar Invitado'}</h3>
+
+        <div className="form-group">
+          <label>Nombre del invitado / Cosplayer</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Serie / Personaje</label>
+          <input
+            type="text"
+            value={serie}
+            onChange={(e) => setSerie(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Tipo de Invitado</label>
+          <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
+            <option value="Cosplayer">Cosplayer</option>
+            <option value="Actor de Doblaje">Actor de Doblaje</option>
+            <option value="Gamer / Streamer">Gamer / Streamer</option>
+            <option value="Panelista">Panelista</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Estado de Confirmación</label>
+          <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+            <option value="Confirmado">Confirmado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <div className="form-actions full-width">
+          <button type="submit" className="btn btn-primary">
+            {editando ? 'Actualizar Invitado' : 'Guardar Invitado'}
+          </button>
+          {editando && (
+            <button type="button" className="btn btn-secondary" onClick={limpiarFormulario}>
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Serie/Personaje</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invitados.map((item, index) => (
-            <tr key={index}>
-              <td>{item.nombre}</td>
-              <td>{item.personaje}</td>
-              <td>{item.tipo}</td>
-              <td>{item.estado}</td>
-              <td>
-                <button onClick={() => handleEdit(index)}>Editar</button>
-                <button onClick={() => handleDelete(index)}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Sección de Tabla y Filtros */}
+      <div className="list-container">
+        <h3>Lista de Invitados</h3>
+
+        {/* Barra de Filtros */}
+        <div className="form-grid" style={{ marginBottom: '1rem', padding: '1rem' }}>
+          <div className="form-group">
+            <label>Buscar por nombre o serie</label>
+            <input
+              type="text"
+              placeholder="Ej: Lisbeth, Sao..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Filtrar por Tipo</label>
+            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+              <option value="Todos">Todos los tipos</option>
+              <option value="Cosplayer">Cosplayer</option>
+              <option value="Actor de Doblaje">Actor de Doblaje</option>
+              <option value="Gamer / Streamer">Gamer / Streamer</option>
+              <option value="Panelista">Panelista</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Filtrar por Estado</label>
+            <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+              <option value="Todos">Todos los estados</option>
+              <option value="Confirmado">Confirmado</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Tabla Responsiva */}
+        {invitadosFiltrados.length === 0 ? (
+          <p className="empty-message">No se encontraron invitados registrados.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Serie / Personaje</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invitadosFiltrados.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.nombre}</td>
+                    <td>{item.serie}</td>
+                    <td>{item.tipo}</td>
+                    <td>{item.estado}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-small" onClick={() => editarInvitado(item)}>
+                          Editar
+                        </button>
+                        <button className="btn btn-small btn-danger" onClick={() => eliminarInvitado(item.id)}>
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
+
+export default Invitados
